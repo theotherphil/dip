@@ -11,7 +11,7 @@ A toy incremental computation framework, intended as an executable introduction 
 >  memoized values and when we have to recompute them.
 
 This library implements enough of the memoization strategy from salsa to hopefully give a useful introduction to the approach used, without having to worry about all the other details that would be  required in a real framework. In particular, we make (at least) the following simplifications:
-* Salsa queries can specify their own key and values types, but Dip uses a concrete enum `Key` for all query keys, and a type alias `Value = i32` for outputs.
+* Salsa queries can specify their own key and value types, but Dip uses a concrete enum `Key` for all query keys, and a type alias `Value = i32` for outputs.
 * Salsa is thread-safe and supports query cancellation. Dip always runs queries to completion on a single thread.
 * Salsa supports a range of caching and cache eviction policies. Dip caches all query outputs and never evicts anything.
 * Salsa works hard to give good performance. Dip does not.

@@ -10,6 +10,7 @@
 // In our example we hide this plumbing from the "end-user" by exporting only a use-case-specific
 // `CostsDatabase` trait from this nested module.
 mod implementation {
+    // The meaning of these types is explained in src/lib.rs, which is best read from top to bottom.
     use dip::{Database, Key, QueryId, Value};
     use std::collections::HashMap;
 
@@ -51,7 +52,7 @@ mod implementation {
         // The ids DISCOUNT_AGE_LIMIT, BASE_FEE and DISCOUNT_AMOUNT are registered as input ids
         // in the call to `dip::Database::new` in the `create_database` function below.
         //
-        // Input queries take an `Into<Key> as input. In our example they have no logical inputs,
+        // Input queries take an `Into<Key>` as input. In our example they have no logical inputs,
         // so we use `()`.
         fn set_discount_age_limit(&mut self, age_limit: Years) {
             self.set(DISCOUNT_AGE_LIMIT, (), age_limit);
@@ -204,12 +205,12 @@ fn main() {
         r#"The memo for one_year_fee(17) is out of date, as the database revision has increased since it was last verified.
         However, as neither the age limit threshold nor the base fees have changed its value is still valid."#,
     );
-    db.one_year_fee(17);
+    assert_eq!(db.one_year_fee(17), 100);
 
     note(
         r#"As 16 <= discount_age_limit we will spot that one of the inputs to one_year_fee(16) has changed and have to recompute."#,
     );
-    db.one_year_fee(16);
+    assert_eq!(db.one_year_fee(16), 60);
 
     note(
         r#"Government funding criteria have changed - we can now also provide discounts to 17 year olds."#,

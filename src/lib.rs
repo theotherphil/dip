@@ -1,4 +1,4 @@
-//! This file contains the whole framework implementation, except for logging code in events.rs
+//! This file contains the whole framework implementation, except for some logging code in events.rs.
 //! It is intended to be readable from top to bottom.
 
 use std::fmt::Debug;
@@ -193,7 +193,7 @@ impl Database {
             .map(|m| m.changed_at)
             .unwrap_or(self.revision);
 
-        // Input queries do not depend on any other questions, so their dependencies are
+        // Input queries do not depend on any other queries, so their dependency sets are
         // always empty.
         let memo = Memo {
             value,
@@ -202,7 +202,7 @@ impl Database {
             dependencies: HashSet::new(),
         };
 
-        // Helper method that stores the memo in `self.storage` and emits an Event.
+        // Helper method that stores the memo in `self.storage` and emits an Event reporting this.
         self.store_memo(slot, memo);
     }
 
@@ -239,9 +239,9 @@ impl Database {
     }
 
     /// The body of `get_with_timestamp` after recording this query as a dependency of the parent query (if any)
-    /// and pushing a new entry on the active query stack.
+    /// and pushing a new entry onto the active query stack.
     fn read(&mut self, slot: Slot) -> StampedValue {
-        // Helper method that queries `self.storage` for a memo in this slot and emits an Event.
+        // Helper method that queries `self.storage` for a memo in this slot and emits an Event reporting this.
         let memo = self.read_memo(slot);
 
         if self.is_input_query(slot.id) {
@@ -327,14 +327,14 @@ impl Database {
             event!(self, Event::ValueComparison, memo.value, new_value, self.revision);
         }
 
-        // If we had a memo before and the query's value value hasn't actually changed then
+        // If we had a memo before and the query's value hasn't actually changed then
         // we don't update `changed_at`.
         let changed_at = memo
             .filter(|m| m.value == new_value)
             .map(|m| m.changed_at)
             .unwrap_or(self.revision);
 
-        // Store the new memo, reading its dependencies from `active_queries`.
+        // Store the new memo, recording its dependencies by reading from the top element of from `active_queries`.
         let memo = Memo {
             value: new_value,
             verified_at: self.revision,
@@ -350,7 +350,7 @@ impl Database {
     ///
     /// If we have an up to date memo for this (query, key) pair then we can use the `changed_at` field
     /// from the memo. Otherwise, we need to recurse into `get_with_timestamp` to get a `StampedValue`
-    /// for the dependency.
+    /// for this slot.
     ///
     /// (Reminder of the state of the call stack if that happens:
     ///     get_with_timestamp(query_one)
